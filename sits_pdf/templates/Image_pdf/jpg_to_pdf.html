@@ -1,0 +1,656 @@
+{% extends 'base.html' %}
+
+{% block title %}
+JPG to PDF
+{% endblock %}
+
+{% block content %}
+  <div id="file-selection-section">
+    <div id="drop-zone" class="drop-zone">
+      <section class="py-5">
+        <div class="container py-5">
+          <div class="text-center">
+            <h1 class="main-heading">JPG to PDF Files</h1>
+            <p class="tool__header__subtitle">Convert your JPG images into a single PDF document for organized and professional presentation.</p>
+            <form method="post" enctype="multipart/form-data" id="merge-upload">
+              {% csrf_token %}
+              <div class="select-form pt-4 display-files">
+                <div class="card select-card">
+                  <div class="card-body">
+                    <div class="file-upload">
+                        <input type="file" name="jpg_files" id="merge-file-input" class="file-selector-input file-input" multiple accept=".jpg" />
+                        <button type="submit" class="upload_button select-btn">Select JPG File</button>
+                    </div>
+                  </div>
+                  <p class="m-0 fw-bold">Drag and drop your JPG files here</p>
+                </div>
+                <div class="uploader__extra">
+                  <i class="fa-brands fa-dropbox link-btn" onclick="openDropboxPicker()"></i>
+                  <i class="fa-brands fa-google-drive link-btn" onclick="startPicker()"></i>
+                  <i class="fa fa-link link-btn" data-bs-toggle="modal" data-bs-target=".url"></i>
+                </div>
+              </div>
+              <input type="hidden" name="dropbox_file_link" id="dropbox-file-link">
+            </form>
+          </div>
+        </div>
+        
+      </section>
+    </div>
+    
+  </div>
+
+  <div id="result-section" style="display: none;">
+    <div class="container-fluid p-0">
+      <div class="d-flex display-wrapper">
+        <div class="sidebar-wrapper">
+          <div class="sidebar" id="sidebar">
+            <button class="btn btn-primary sidebar-toggle" id="toggleSidebar"><i class="fa-solid fa-gear"></i></button>
+            <div class="add-file">
+              <div class="add-btn btn" data-bs-placement="right" data-bs-toggle="tooltip" title="Add More Files!">
+                <form id="add_more_files_form" action="{% url 'jpg_to_pdf' %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <input id="add_more_files_input" class="add_more_files_input w-25" type="file" name="jpg_files" multiple accept=".jpg" />
+                </form>
+                <i class="fa-solid fa-plus"></i>
+              </div>
+              <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Upload From Your Computer!">
+                <form id="add_more_files_form" action="{% url 'jpg_to_pdf' %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <input id="add_more_files_input" class="add_more_files_input" type="file" name="jpg_files" multiple accept=".jpg" />
+                </form>
+                <i class="fa-solid fa-tv"></i>
+              </div>
+              <div data-bs-toggle="modal" data-bs-target=".url">
+                <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Select JPG From URL!">
+                  <i class="fa fa-link"></i>
+                </div>
+              </div>
+              <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Select JPG From Google Drive!" onclick="startPicker()">
+                <i class="fa-brands fa-google-drive"></i>
+              </div>
+              <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Select JPG From Dropbox!" onclick="openDropboxPicker()">
+                <i class="fa-brands fa-dropbox"></i>
+              </div>
+            </div>
+            <div class="sidebar-title bg-light">
+              <h2>JPG to PDF</h2>
+            </div>
+          </div>
+        </div>
+        <div id="drop-zone" class="drop-zone drop_drag">
+          <div class="display-files" id="displayFiles">
+            <!-- File previews will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+
+      <form id="merge" action="{% url 'jpg_to_pdf_convert_view' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" id="filenames" name="filenames" value="" />
+      </form>
+      <button type="submit" class="btn process-btn" form="merge" id="final-output-button">JPG to PDF<i class="fa-solid fa-circle-arrow-right ps-3"></i></button>
+    </div>
+  </div>
+
+  <div class="modal fade url" id="url" tabindex="-1" aria-labelledby="url" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="url">Enter URL</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="url-form">
+            <div class="input-group">
+              <input class="form-control" id="url_input" name="url_input" type="url" placeholder="http://example.com/myfile.jpg" required />
+            </div>
+            <div class="actions pt-4">
+              <button type="submit" id="url-submit-btn" class="ok btn btn-primary">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal_background">
+        <p class="text-center progress_text">Uploading and Merging Files</p>
+        <div class="modal-body text-center p-0 m-0">
+          <div class="progress">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal_background">
+        <div class="modal-body text-center">
+          <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-light">Processing...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('merge-upload').addEventListener('change', handleFileUpload);
+      const addMoreFilesInputs = document.getElementsByClassName('add_more_files_input');
+      for (let input of addMoreFilesInputs) {
+          input.addEventListener('change', handleFileUpload);
+      }
+
+      document.getElementById('final-output-button').addEventListener('click', showProgressBar);
+      
+      // Add event listener for URL form submission
+    });
+
+    document.getElementById('url-form').addEventListener('submit', handleUrlSubmit);
+  
+    function handleUrlSubmit(e) {
+        e.preventDefault();
+        console.log("URL form submitted"); // Debug log
+        const urlInput = document.getElementById('url_input');
+        if (urlInput.value) {
+            showLoader();
+            const formData = new FormData();
+            formData.append('url_input', urlInput.value);
+            submitToServer(formData);
+            // Properly close the modal and remove the backdrop
+            const modalElement = document.getElementById('url');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+            
+            // Remove the backdrop manually
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            
+            document.body.classList.remove('modal-open');
+            
+            urlInput.value = '';
+        }
+    }
+
+  function showProgressBar(e) {
+    e.preventDefault();
+  
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'), {
+      backdrop: 'static',
+      keyboard: false
+    });
+    progressModal.show();
+  
+    const xhr = new XMLHttpRequest();
+  
+    xhr.open('POST', '{% url 'jpg_to_pdf_convert_view' %}', true);
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+  
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        updateProgressBar(percent);
+      }
+    });
+  
+    xhr.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        updateProgressBar(percent);
+      }
+    });
+  
+    xhr.addEventListener('load', () => {
+      updateProgressBar(100);
+      progressModal.hide();
+      document.getElementById('merge').submit();
+    });
+  
+    xhr.send(new FormData(document.getElementById('merge')));
+  }
+  
+  function updateProgressBar(percent) {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = percent + '%';
+    progressBar.setAttribute('aria-valuenow', percent);
+    progressBar.textContent = percent + '%';
+  }
+  
+
+  function showLoader() {
+    const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
+    loaderModal.show();
+  }
+
+  function hideLoader() {
+    const startTime = new Date().getTime();
+  
+    setTimeout(() => {
+      const loaderModal = bootstrap.Modal.getInstance(document.getElementById('loaderModal'));
+      if (loaderModal) {
+        loaderModal.hide();
+        
+        setTimeout(() => {
+          const modalElement = document.getElementById('loaderModal');
+          if (modalElement && modalElement.classList.contains('show')) {
+            console.log('Loader did not hide properly. Forcing hide.');
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            const modalBackdrop = document.querySelector('.modal-backdrop');
+            if (modalBackdrop) {
+              modalBackdrop.remove();
+            }
+          }
+        }, 100);
+      }
+    });
+  }
+
+  function updateFilenames(filenames) {
+    document.getElementById('filenames').value = filenames.join(',');
+    updateMergePageState();
+  }
+
+  function updateMergePageState() {
+    const dropActive = document.getElementById('sidebar');
+    const displayFiles = document.getElementById('displayFiles').children;
+  
+    if (displayFiles.length === 0) {
+      dropActive.classList.add('no_fie_active');
+      if (!dropActive.querySelector('h6')) {
+        const paragraph = document.createElement('h6');
+        paragraph.textContent = 'No file Selected';
+        paragraph.classList.add('no-files-message');
+        const image = document.createElement('img');
+        image.src = '/static/images/icon/arrow.svg';
+        image.classList.add('no-file-icon');
+        const para = document.createElement('h6');
+        para.textContent = 'Please add a file to proceed';
+        para.classList.add('no-files-message');
+        dropActive.appendChild(paragraph);
+        dropActive.appendChild(image);
+        dropActive.appendChild(para);
+      }
+    } else {
+      dropActive.classList.remove('no_fie_active');
+      const paragraph = dropActive.querySelector('h6');
+      const image = dropActive.querySelector('img');
+      if (paragraph) {
+        paragraph.remove();
+      }
+      if (image) {
+        image.remove();
+      }
+    }
+  }
+
+
+  let isDraggingFile = false;
+
+  // File upload drag-and-drop
+  const dropZones = document.getElementsByClassName('drop-zone');
+
+  function handleDragOver(e) {
+      if (isDraggingFile) return;
+      e.preventDefault();
+      this.classList.add('dragover');
+  }
+
+  function handleDragLeave(e) {
+      if (isDraggingFile) return;
+      this.classList.remove('dragover');
+  }
+
+  function handleDrop(e) {
+      if (isDraggingFile) return;
+      e.preventDefault();
+      this.classList.remove('dragover');
+      handleFileUpload(e);
+  }
+
+  Array.from(dropZones).forEach(dropZone => {
+      dropZone.addEventListener('dragover', handleDragOver);
+      dropZone.addEventListener('dragleave', handleDragLeave);
+      dropZone.addEventListener('drop', handleDrop);
+  });
+
+  function initDragAndDrop() {
+      const container = document.getElementById('displayFiles');
+      const items = container.getElementsByClassName('files');
+
+      Array.from(items).forEach(item => {
+          item.addEventListener('dragstart', dragStart);
+          item.addEventListener('dragover', dragOver);
+          item.addEventListener('dragenter', dragEnter);
+          item.addEventListener('dragleave', dragLeave);
+          item.addEventListener('drop', dragDrop);
+          item.addEventListener('dragend', dragEnd);
+      });
+  }
+
+  function dragStart(e) {
+      isDraggingFile = true;
+      e.dataTransfer.setData('text/plain', e.target.dataset.fileid);
+      setTimeout(() => e.target.classList.add('dragging'), 0);
+  }
+
+  function dragOver(e) {
+      if (!isDraggingFile) return;
+      e.preventDefault();
+  }
+
+  function dragEnter(e) {
+      if (!isDraggingFile) return;
+      e.preventDefault();
+      if (e.target.closest('.files')) {
+          e.target.closest('.files').classList.add('drag-over');
+      }
+  }
+
+  function dragLeave(e) {
+      if (!isDraggingFile) return;
+      if (e.target.closest('.files')) {
+          e.target.closest('.files').classList.remove('drag-over');
+      }
+  }
+
+  function dragDrop(e) {
+    if (!isDraggingFile) return;
+    e.preventDefault();
+    const draggedItemId = e.dataTransfer.getData('text/plain');
+    const draggedItem = document.querySelector(`[data-fileid="${draggedItemId}"]`);
+    const dropTarget = e.target.closest('.files');
+
+    if (draggedItem && dropTarget && draggedItem !== dropTarget) {
+        const container = document.getElementById('displayFiles');
+
+        // Determine the drop position relative to the dragged item
+        const dropIndex = Array.from(container.children).indexOf(dropTarget);
+        const draggedIndex = Array.from(container.children).indexOf(draggedItem);
+
+        if (dropIndex > draggedIndex) {
+            // Move item downwards
+            container.insertBefore(draggedItem, dropTarget.nextSibling);
+        } else {
+            // Move item upwards
+            container.insertBefore(draggedItem, dropTarget);
+        }
+    }
+
+    updateFilenamesOrder();
+    if (dropTarget) {
+        dropTarget.classList.remove('drag-over');
+    }
+  }
+
+  function dragEnd(e) {
+      isDraggingFile = false;
+      e.target.classList.remove('dragging');
+      Array.from(document.getElementsByClassName('files')).forEach(item => {
+          item.classList.remove('drag-over');
+      });
+  }
+
+  function updateFilenamesOrder() {
+      const container = document.getElementById('displayFiles');
+      const items = container.getElementsByClassName('files');
+      const filenames = Array.from(items).map(item => item.dataset.filename);
+      document.getElementById('filenames').value = filenames.join(',');
+  }
+
+  function updateFileDisplay(fileData) {
+    const displayFiles = document.getElementById('displayFiles');
+    displayFiles.innerHTML = '';
+    fileData.forEach((file, index) => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'files';
+        fileDiv.setAttribute('data-filename', file.filename);
+        fileDiv.setAttribute('data-fileid', file.file_id);
+        const displayFilename = file.filename.length > 25 ? file.filename.substring(0, 22) + '...' : file.filename;
+        fileDiv.draggable = true;
+        fileDiv.innerHTML = `
+            <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+            <img src="data:image/jpeg;base64,${file.image_data}" alt="Preview of ${file.filename}" />
+            <p class="m-0">${displayFilename}</p>
+            <button class="close-btn" onclick="removeFile('${file.file_id}')"><i class="fa-regular fa-circle-xmark delete-btn"></i></button>`;
+        displayFiles.appendChild(fileDiv);
+    });
+    updateMergePageState();
+    initDragAndDrop();
+}
+
+  function removeFile(fileId) {
+    fetch('{% url 'remove_file' %}', {
+        method: 'POST',
+        body: JSON.stringify({ fileId: fileId }),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateFileDisplay(data.file_data);
+            updateFilenames(data.filenames);
+        } else {
+            alert(data.error);
+        }
+    });
+  }
+
+  function handleFileUpload(e) {
+    e.preventDefault();
+    showLoader();
+    const formData = new FormData();
+    
+    if (e.type === 'drop') {
+        for (let file of e.dataTransfer.files) {
+            formData.append('jpg_files', file);
+        }
+    } else {
+        for (let file of e.target.files) {
+            formData.append('jpg_files', file);
+        }
+    }
+
+    submitToServer(formData);
+
+    e.target.value = '';
+  }
+
+  function submitToServer(formData) {
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    console.log("Submitting to server"); // Debug log
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value); // Debug log
+    }
+
+    fetch('{% url 'jpg_to_pdf' %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server response:', data); 
+        hideLoader();
+        if (data.success) {
+            document.getElementById('file-selection-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+            updateFileDisplay(data.file_data);
+            updateFilenames(data.filenames);
+        } else {
+            console.error('Error:', data.error);
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        hideLoader();
+        console.error('Error:', error);
+        console.error('Response:', error.response);
+        alert('An error occurred while processing your request.');
+    });
+  }
+
+  function openDropboxPicker() {
+    Dropbox.choose({
+        success: function(files) {
+            if (files && files.length > 0) {
+                const form = document.getElementById('merge-upload');
+                showLoader();
+                const formData = new FormData(form);
+
+                // Append all Dropbox file links to the form data
+                files.forEach((file, index) => {
+                    formData.append(`dropbox_file_link_${index}`, file.link);
+                });
+
+                // Submit the form data via fetch to the server
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoader();
+                    if (data.success) {
+                        updateFileDisplay(data.file_data);
+                        updateFilenames(data.filenames);
+                        document.getElementById('file-selection-section').style.display = 'none';
+                        document.getElementById('result-section').style.display = 'block';
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => {
+                    hideLoader();
+                    console.error('Error:', error);
+                    alert('An error occurred while processing your request.');
+                });
+            }
+        },
+        linkType: "direct",
+        multiselect: true,
+        extensions: ['.jpg'],
+    });
+  }
+
+
+  let developerKey = 'AIzaSyA7b_RFGNGubqM-o99S3FoEb5RQD3m_p_A'
+  let clientId = '511161570764-rbagpt51dcf0i7s4be2255fub2pbv5da.apps.googleusercontent.com'
+  let appId = 'pdf-tools-431007'
+  let oauthToken = '{{ credentials.token|default:"" }}'
+  let needAuth = {{ need_auth|yesno:"true,false" }};
+
+  function startPicker() {
+    if (oauthToken) {
+        createPicker();
+    } else {
+        authenticateAndOpenPicker();
+    }
+  }
+
+  function authenticateAndOpenPicker() {
+      var authWindow = window.open('{% url "authorize" %}', 'authWindow', 'width=600,height=600');
+      window.addEventListener('message', function(event) {
+          if (event.data === 'authorized') {
+              console.log("Authorization message received");
+              authWindow.close();
+              // Instead of reloading, fetch the new token and open the picker
+              fetchNewTokenAndOpenPicker();
+          }
+      });
+  }
+
+  function fetchNewTokenAndOpenPicker() {
+      // Fetch the new token from the server
+      fetch('{% url "get_oauth_token" %}')
+          .then(response => response.json())
+          .then(data => {
+              if (data.token) {
+                  console.log("New token received");
+                  oauthToken = data.token;
+                  needAuth = false;
+                  createPicker();
+              } else {
+                  console.error("Failed to get new token");
+              }
+          })
+          .catch(error => console.error('Error:', error));
+  }
+
+
+  function createPicker() {
+      gapi.load('picker', function () {
+          let view = new google.picker.View(google.picker.ViewId.DOCS)
+              .setMimeTypes('image/jpeg')
+          let picker = new google.picker.PickerBuilder()
+              .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+              .setOAuthToken(oauthToken)
+              .setAppId(appId)
+              .addView(view)
+              {% comment %} .addView(new google.picker.DocsUploadView()) {% endcomment %}
+              .setCallback(pickerCallback)
+              .build()
+          picker.setVisible(true)
+      })
+  }
+
+  function pickerCallback(data) {
+    if (data.action == google.picker.Action.PICKED) {
+        const form = document.getElementById('merge-upload');
+        showLoader();
+        const formData = new FormData(form);
+
+        data.docs.forEach(doc => {
+            console.log('Picked file ID:', doc.id);
+            formData.append('google_drive_files', doc.id);
+        });
+
+        // Submit the form data via fetch to the server
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+          hideLoader();
+            if (data.success) {
+                updateFileDisplay(data.file_data);
+                updateFilenames(data.filenames);
+                document.getElementById('file-selection-section').style.display = 'none';
+                document.getElementById('result-section').style.display = 'block';
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+          hideLoader();
+            console.error('Error:', error);
+            alert('An error occurred while processing your request.');
+        });
+    }
+  }
+    
+  </script>
+{% endblock %}
+

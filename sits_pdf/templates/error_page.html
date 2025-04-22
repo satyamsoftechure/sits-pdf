@@ -1,0 +1,16 @@
+<!-- error.html -->
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Error Page{% endblock %}
+
+{% block content %}
+    <div class="error-container">
+        <div class="error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h1>Oops! Something went wrong.</h1>
+            <p>{{ error_message }}</p>
+        </div>
+    </div>
+{% endblock %}

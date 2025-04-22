@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SITS PDF | Free Online PDF Tools for Every Need</title>
+    <meta name="description" content="SITS PDF offers a comprehensive suite of free online PDF tools. Easily merge, split, compress, convert, and edit your PDF files with our user-friendly platform."/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <script src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="5y1fai5l8ytc26j"></script>
+    <link rel="stylesheet" href="{% static 'css/new_style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const STATIC_URL = "{% static '' %}";
+    </script>
+    <title>
+      {% block title %}
+       SITS PDF
+      {% endblock %}
+    </title>
+    <!-- Add your CSS files here -->
+  </head>
+  <body>
+    {% include 'header.html' %}
+    <main>
+      <!-- Main content -->
+      {% block content %}
+
+      {% endblock %}
+    </main>
+    {% include 'footer.html' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="{% static 'js/formsubmit.js' %}"></script>
+    <script src="{% static 'js/sidebar.js' %}"></script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authorization Successful</title>
+    <script>
+        console.log("oauth2_callback.html loaded");
+        window.onload = function() {
+            console.log("Window loaded, attempting to send message");
+            try {
+                window.opener.postMessage('authorized', '*');
+                console.log("Message sent successfully");
+            } catch (error) {
+                console.error("Error sending message:", error);
+            }
+            
+            console.log("Setting timeout to close window");
+            setTimeout(function() {
+                console.log("Timeout triggered, attempting to close window");
+                try {
+                    window.close();
+                    console.log("Window close called");
+                } catch (error) {
+                    console.error("Error closing window:", error);
+                }
+            }, 1000);  // Close after 1 second
+        }
+    </script>
+</head>
+<body>
+    <h1>Authorization Successful</h1>
+    <p>This window will close automatically. If it doesn't, please check the console for errors and close it manually.</p>
+</body>
+</html>

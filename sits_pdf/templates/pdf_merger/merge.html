@@ -1,0 +1,837 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Merge PDFs
+{% endblock %}
+
+{% block content %}
+  <div id="file-selection-section">
+    <div id="drop-zone" class="drop-zone">
+      <section class="py-5">
+        <div class="container py-5">
+          <div class="text-center">
+            <h1 class="main-heading">Merge PDF files</h1>
+            <p class="tool__header__subtitle">Effortlessly combine multiple PDF files into one seamless document for streamlined viewing and sharing.</p>
+            <form action="{% url 'upload_pdfs' %}" method="post" enctype="multipart/form-data" id="merge-upload">
+              {% csrf_token %}
+              <div class="select-form pt-4 display-files">
+                <div class="card select-card">
+                  <div class="card-body">
+                    <div class="file-upload">
+                      <input type="file" name="pdfs" id="merge-file-input" class="file-selector-input file-input" multiple accept="application/pdf" />
+                      <button type="submit" class="upload_button select-btn">Select PDF File</button>
+                    </div>
+                  </div>
+                  <p class="m-0 fw-bold">Drag and drop your PDF files here</p>
+                </div>
+                <div class="uploader__extra">
+                  <i class="fa-brands fa-dropbox link-btn" onclick="openDropboxPicker()"></i>
+                  <i class="fa-brands fa-google-drive link-btn" onclick="startPicker()"></i>
+                  <i class="fa fa-link link-btn" data-bs-toggle="modal" data-bs-target="#url"></i>
+                </div>
+              </div>
+              <input type="hidden" name="dropbox_file_link" id="dropbox-file-link">
+            </form>
+          </div>
+        </div>
+        
+      </section>
+    </div>    
+  </div>
+
+  <div class="modal fade" id="url" tabindex="-1" aria-labelledby="url" aria-hidden="false">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="url">Enter URL</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="url-form">
+            <div class="input-group">
+              <input class="form-control" id="url_input" name="url_input" type="url" placeholder="http://example.com/myfile.pdf" required />
+            </div>
+            <div class="actions pt-4">
+              <button type="submit" id="url-submit-btn" class="ok btn btn-primary">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="result-section" style="display: none;">
+    <div class="container-fluid p-0">
+      <div class="d-flex display-wrapper">
+        <div class="sidebar-wrapper">
+          <div class="sidebar" id="sidebar">
+            <button class="btn btn-primary sidebar-toggle" id="toggleSidebar"><i class="fa-solid fa-gear"></i></button>
+            <div class="add-file">
+              <div class="add-btn btn" data-bs-placement="right" data-bs-toggle="tooltip" title="Add More Files!">
+                <form id="add_more_files_form" action="{% url 'upload_pdfs' %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <input id="add_more_files_input" class="add_more_files_input w-75" type="file" name="pdfs" multiple accept="application/pdf" />
+                </form>
+                <i class="fa-solid fa-plus"></i>
+              </div>
+              <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Upload From Your Computer!">
+                <form id="add_more_files_form" action="{% url 'upload_pdfs' %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <input id="add_more_files_input" class="add_more_files_input" type="file" name="pdfs" multiple accept="application/pdf" />
+                </form>
+                <i class="fa-solid fa-tv"></i>
+              </div>
+              <div data-bs-toggle="modal" data-bs-target="#url">
+                <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Select PDF From URL!">
+                  <i class="fa fa-link"></i>
+                </div>
+              </div>
+              <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Select PDF From Google Drive!" onclick="startPicker()">
+                <i class="fa-brands fa-google-drive"></i>
+              </div>
+              <div class="add-btn btn drive mt-2" data-bs-placement="right" data-bs-toggle="tooltip" title="Select PDF From Dropbox!" onclick="openDropboxPicker()">
+                <i class="fa-brands fa-dropbox"></i>
+              </div>
+            </div>
+            <div class="sidebar-title bg-light">
+              <h2>Merge PDF</h2>
+            </div>
+          </div>
+        </div>
+        <div id="drop-zone" class="drop-zone drop_drag">
+          <div class="display-files" id="displayFiles">
+            <!-- File previews will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+
+      <form id="merge" action="{% url 'merge_pdfs' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" id="filenames" name="filenames" value="" />
+      </form>
+      <button type="submit" class="btn process-btn" form="merge" id="final-output-button" disabled>Merge PDF <i class="fa-solid fa-circle-arrow-right ps-3"></i></button>
+    </div>
+  </div>
+
+  <div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal_background">
+        <p class="text-center progress_text">Uploading and Merging Files</p>
+        <div class="modal-body text-center p-0 m-0">
+          <div class="progress">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal_background">
+        <div class="modal-body text-center">
+          <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-light">Processing...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('merge-upload').addEventListener('change', handleFileUpload);
+      const addMoreFilesInputs = document.getElementsByClassName('add_more_files_input');
+      for (let input of addMoreFilesInputs) {
+          input.addEventListener('change', handleFileUpload);
+      }
+
+      document.getElementById('final-output-button').addEventListener('click', showProgressBar);
+      
+      // Add event listener for URL form submission
+      document.getElementById('url-form').addEventListener('submit', handleUrlSubmit);
+  
+      function handleUrlSubmit(e) {
+          e.preventDefault();
+          console.log("URL form submitted"); // Debug log
+          const urlInput = document.getElementById('url_input');
+          if (urlInput.value) {
+              showLoader();
+              const formData = new FormData();
+              formData.append('url_input', urlInput.value);
+              submitToServer(formData);
+              // Properly close the modal and remove the backdrop
+              const modalElement = document.getElementById('url');
+              const modalInstance = bootstrap.Modal.getInstance(modalElement);
+              modalInstance.show();
+              if (modalInstance) {
+                modalInstance.hide();
+              }
+    
+              modalElement.addEventListener('hidden.bs.modal', () => {
+                urlInput.value = ''; // Reset input field
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove(); // Ensure backdrop is removed
+                }
+                document.body.classList.remove('modal-open');
+            });
+          }
+        }
+    });
+
+    function showProgressBar(e) {
+      e.preventDefault();
+    
+      const progressModal = new bootstrap.Modal(document.getElementById('progressModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+      progressModal.show();
+    
+      const xhr = new XMLHttpRequest();
+    
+      xhr.open('POST', '{% url 'merge_pdfs' %}', true);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          updateProgressBar(percent);
+        }
+      });
+    
+      xhr.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          updateProgressBar(percent);
+        }
+      });
+    
+      xhr.addEventListener('load', () => {
+        updateProgressBar(100);
+        progressModal.hide();
+        document.getElementById('merge').submit();
+      });
+    
+      xhr.send(new FormData(document.getElementById('merge')));
+    }
+    
+    function updateProgressBar(percent) {
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = percent + '%';
+      progressBar.setAttribute('aria-valuenow', percent);
+      progressBar.textContent = percent + '%';
+    }
+    
+
+    function showLoader() {
+      const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
+      loaderModal.show();
+    }
+
+    function hideLoader() {
+      const startTime = new Date().getTime();
+    
+      setTimeout(() => {
+        const loaderModal = bootstrap.Modal.getInstance(document.getElementById('loaderModal'));
+        if (loaderModal) {
+          loaderModal.hide();
+          
+          setTimeout(() => {
+            const modalElement = document.getElementById('loaderModal');
+            if (modalElement && modalElement.classList.contains('show')) {
+              console.log('Loader did not hide properly. Forcing hide.');
+              modalElement.classList.remove('show');
+              modalElement.style.display = 'none';
+              document.body.classList.remove('modal-open');
+              const modalBackdrop = document.querySelector('.modal-backdrop');
+              if (modalBackdrop) {
+                modalBackdrop.remove();
+              }
+            }
+          }, 100);
+        }
+      });
+    }
+
+
+    function updateFilenames(filenames) {
+        document.getElementById('filenames').value = filenames.join(',');
+        updateMergePageState();
+        updateMergeButtonState();
+    }
+
+    function updateMergeButtonState() {
+      const mergeButton = document.getElementById('final-output-button');
+      const displayFiles = document.getElementById('displayFiles').children;
+      mergeButton.disabled = displayFiles.length < 2;
+    }
+
+    function updateMergePageState() {
+      const dropActive = document.getElementById('sidebar');
+      const displayFiles = document.getElementById('displayFiles').children;
+    
+      if (displayFiles.length === 0) {
+        dropActive.classList.add('no_fie_active');
+        if (!dropActive.querySelector('h6')) {
+          const paragraph = document.createElement('h6');
+          paragraph.textContent = 'No file Selected';
+          paragraph.classList.add('no-files-message');
+          const image = document.createElement('img');
+          image.src = '/static/images/icon/arrow.svg';
+          image.classList.add('no-file-icon');
+          const para = document.createElement('h6');
+          para.textContent = 'Please add a file to proceed';
+          para.classList.add('no-files-message');
+          dropActive.appendChild(paragraph);
+          dropActive.appendChild(image);
+          dropActive.appendChild(para);
+        }
+      } else {
+        dropActive.classList.remove('no_fie_active');
+        const paragraph = dropActive.querySelector('h6');
+        const image = dropActive.querySelector('img');
+        if (paragraph) {
+          paragraph.remove();
+        }
+        if (image) {
+          image.remove();
+        }
+      }
+    }
+
+
+    let draggedItem = null;
+    let placeholder = null;
+    let initialX, initialY;
+    
+    function initDragAndDrop() {
+        const container = document.getElementById('displayFiles');
+        const items = container.getElementsByClassName('files');
+    
+        Array.from(items).forEach(item => {
+            item.draggable = true;
+            item.addEventListener('dragstart', dragStart);
+            item.addEventListener('dragover', dragOver);
+            item.addEventListener('dragenter', dragEnter);
+            item.addEventListener('dragleave', dragLeave);
+            item.addEventListener('drop', dragDrop);
+            item.addEventListener('dragend', dragEnd);
+    
+            // Add mouse/touch events for custom dragging
+            item.addEventListener('mousedown', customDragStart);
+            item.addEventListener('touchstart', customDragStart, { passive: false });
+        });
+    
+        document.addEventListener('mousemove', customDrag);
+        document.addEventListener('touchmove', customDrag, { passive: false });
+        document.addEventListener('mouseup', customDragEnd);
+        document.addEventListener('touchend', customDragEnd);
+    }
+    
+    function dragStart(e) {
+        isDraggingFile = true;
+        draggedItem = e.target;
+        e.dataTransfer.setData('text/plain', e.target.dataset.fileid);
+        setTimeout(() => e.target.classList.add('dragging'), 0);
+        createPlaceholder(e.target);
+    }
+    
+    function dragOver(e) {
+        if (!isDraggingFile) return;
+        e.preventDefault();
+    }
+    
+    function dragEnter(e) {
+        if (!isDraggingFile) return;
+        e.preventDefault();
+        if (e.target.closest('.files')) {
+            e.target.closest('.files').classList.add('drag-over');
+        }
+    }
+    
+    function dragLeave(e) {
+        if (!isDraggingFile) return;
+        if (e.target.closest('.files')) {
+            e.target.closest('.files').classList.remove('drag-over');
+        }
+    }
+    
+    function dragDrop(e) {
+        if (!isDraggingFile) return;
+        e.preventDefault();
+        const draggedItemId = e.dataTransfer.getData('text/plain');
+        const draggedItem = document.querySelector(`[data-fileid="${draggedItemId}"]`);
+        const dropTarget = e.target.closest('.files');
+    
+        if (draggedItem && dropTarget && draggedItem !== dropTarget) {
+            const container = document.getElementById('displayFiles');
+            const dropIndex = Array.from(container.children).indexOf(dropTarget);
+            const draggedIndex = Array.from(container.children).indexOf(draggedItem);
+    
+            if (dropIndex > draggedIndex) {
+                container.insertBefore(draggedItem, dropTarget.nextSibling);
+            } else {
+                container.insertBefore(draggedItem, dropTarget);
+            }
+        }
+    
+        updateFilenamesOrder();
+        if (dropTarget) {
+            dropTarget.classList.remove('drag-over');
+        }
+        removePlaceholder();
+    }
+    
+    function dragEnd(e) {
+        isDraggingFile = false;
+        e.target.classList.remove('dragging');
+        Array.from(document.getElementsByClassName('files')).forEach(item => {
+            item.classList.remove('drag-over');
+        });
+        removePlaceholder();
+    }
+    
+    function customDragStart(e) {
+        if (e.target.closest('.close-btn')) return;
+    
+        isDraggingFile = true;
+        draggedItem = e.target.closest('.files');
+        const rect = draggedItem.getBoundingClientRect();
+        initialX = e.type.includes('mouse') ? e.clientX - rect.left : e.touches[0].clientX - rect.left;
+        initialY = e.type.includes('mouse') ? e.clientY - rect.top : e.touches[0].clientY - rect.top;
+    
+        createPlaceholder(draggedItem);
+    
+        setTimeout(() => {
+            draggedItem.classList.add('dragging');
+            draggedItem.style.position = 'fixed';
+            draggedItem.style.zIndex = 1000;
+            document.body.appendChild(draggedItem);
+            updateDragPosition(e);
+        }, 0);
+    
+        e.preventDefault();
+    }
+    
+    function customDrag(e) {
+        if (!isDraggingFile) return;
+        e.preventDefault();
+        updateDragPosition(e);
+    }
+    
+    function customDragEnd(e) {
+        if (!isDraggingFile) return;
+        isDraggingFile = false;
+    
+        draggedItem.classList.remove('dragging');
+        draggedItem.style.position = '';
+        draggedItem.style.zIndex = '';
+        draggedItem.style.left = '';
+        draggedItem.style.top = '';
+    
+        const closestItem = getClosestElement(e.clientX, e.clientY);
+        if (closestItem && closestItem !== placeholder) {
+            closestItem.parentNode.insertBefore(draggedItem, 
+                isBeforeTarget(e.clientY, closestItem) ? closestItem : closestItem.nextSibling);
+        } else {
+            placeholder.parentNode.replaceChild(draggedItem, placeholder);
+        }
+    
+        removePlaceholder();
+        updateFilenamesOrder();
+    }
+    
+    function updateDragPosition(e) {
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    
+        draggedItem.style.left = `${clientX - initialX}px`;
+        draggedItem.style.top = `${clientY - initialY}px`;
+    
+        const closest = getClosestElement(clientX, clientY);
+        if (closest && closest !== placeholder) {
+            if (isBeforeTarget(clientY, closest)) {
+                closest.parentNode.insertBefore(placeholder, closest);
+            } else {
+                closest.parentNode.insertBefore(placeholder, closest.nextSibling);
+            }
+        }
+    }
+    
+    function getClosestElement(x, y) {
+        const elements = document.elementsFromPoint(x, y);
+        return elements.find(el => el.classList.contains('files') && el !== draggedItem);
+    }
+    
+    function isBeforeTarget(y, target) {
+        const box = target.getBoundingClientRect();
+        return y < box.top + box.height / 2;
+    }
+    
+    function createPlaceholder(item) {
+        placeholder = document.createElement('div');
+        placeholder.classList.add('file-placeholder');
+        placeholder.style.height = `${item.offsetHeight}px`;
+        placeholder.style.width = `${item.offsetWidth}px`;
+        item.parentNode.insertBefore(placeholder, item);
+    }
+    
+    function removePlaceholder() {
+        if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.removeChild(placeholder);
+        }
+        placeholder = null;
+    }
+    
+    function updateFilenamesOrder() {
+        const container = document.getElementById('displayFiles');
+        const items = container.getElementsByClassName('files');
+        const filenames = Array.from(items).map(item => item.dataset.filename);
+        document.getElementById('filenames').value = filenames.join(',');
+    }
+    
+    function updateFileDisplay(fileData) {
+      const displayFiles = document.getElementById('displayFiles');
+      const existingOrder = Array.from(displayFiles.children).map(item => item.dataset.fileid);
+      
+      // Create a map of file data for quick lookup
+      const fileMap = new Map(fileData.map(file => [file.file_id, file]));
+      
+      // Remove files that no longer exist
+      Array.from(displayFiles.children).forEach(item => {
+          if (!fileMap.has(item.dataset.fileid)) {
+              item.remove();
+          }
+      });
+      
+      // Update existing files and add new ones
+      existingOrder.forEach(fileId => {
+          const file = fileMap.get(fileId);
+          if (file) {
+              let fileDiv = displayFiles.querySelector(`[data-fileid="${fileId}"]`);
+              if (!fileDiv) {
+                  fileDiv = createFileDiv(file);
+                  displayFiles.appendChild(fileDiv);
+              } else {
+                  updateFileDiv(fileDiv, file);
+              }
+              fileMap.delete(fileId);
+          }
+      });
+      
+      // Add any new files that weren't in the existing order
+      fileMap.forEach(file => {
+          const fileDiv = createFileDiv(file);
+          displayFiles.appendChild(fileDiv);
+      });
+      
+      updateMergePageState();
+      updateMergeButtonState();
+      initDragAndDrop();
+      updateFilenamesOrder();
+  }
+  
+  function createFileDiv(file) {
+      const fileDiv = document.createElement('div');
+      fileDiv.className = 'files';
+      fileDiv.setAttribute('data-filename', file.filename);
+      fileDiv.setAttribute('data-fileid', file.file_id);
+      updateFileDiv(fileDiv, file);
+      return fileDiv;
+  }
+  
+  function updateFileDiv(fileDiv, file) {
+      const displayFilename = file.filename.length > 25 ? file.filename.substring(0, 22) + '...' : file.filename;
+      fileDiv.innerHTML = `
+          <img src="${file.image_data}" alt="Preview of ${file.filename}" />
+          <p class="m-0">${displayFilename}</p>
+          <button class="close-btn" onclick="removeFile('${file.file_id}')"><i class="fa-regular fa-circle-xmark delete-btn"></i></button>`;
+  }
+
+    function removeFile(fileId) {
+      fetch('{% url 'remove_file' %}', {
+          method: 'POST',
+          body: JSON.stringify({ fileId: fileId }),
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+            const fileDiv = document.querySelector(`[data-fileid="${fileId}"]`);
+            if (fileDiv) {
+                fileDiv.remove();
+            }
+            updateFileDisplay(data.file_data);
+            updateFilenames(data.filenames);
+            updateFilenamesOrder();
+          } else {
+              alert(data.error);
+          }
+      });
+  }
+
+  function handleFileUpload(e) {
+    e.preventDefault();
+    showLoader();
+    const formData = new FormData();
+    
+    if (e.type === 'drop') {
+        for (let file of e.dataTransfer.files) {
+            formData.append('pdfs', file);
+        }
+    } else {
+        for (let file of e.target.files) {
+            formData.append('pdfs', file);
+        }
+    }
+
+    submitToServer(formData);
+
+    e.target.value = '';
+  }
+
+  function submitToServer(formData) {
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('{% url 'upload_pdfs' %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoader();
+        if (data.success) {
+            const currentFiles = Array.from(document.getElementById('displayFiles').children)
+                .map(item => ({ 
+                    file_id: item.dataset.fileid, 
+                    filename: item.dataset.filename,
+                    image_data: item.querySelector('img').src
+                }));
+            const newFiles = data.file_data.filter(file => 
+                !currentFiles.some(existingFile => existingFile.file_id === file.file_id)
+            );
+            const allFiles = [...currentFiles, ...newFiles];
+            
+            document.getElementById('file-selection-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+            updateFileDisplay(allFiles);
+            updateFilenames(allFiles.map(file => file.filename));
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        hideLoader();
+        console.error('Error:', error);
+        alert('An error occurred while processing your request.');
+    });
+}
+
+  function openDropboxPicker() {
+    Dropbox.choose({
+        success: function(files) {
+            if (files && files.length > 0) {
+                const form = document.getElementById('merge-upload');
+                showLoader();
+                const formData = new FormData(form);
+
+                // Append all Dropbox file links to the form data
+                files.forEach((file, index) => {
+                  formData.append(`dropbox_file_link_${index}`, file.link);
+                });
+
+                // Submit the form data via fetch to the server
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                  hideLoader();
+                    if (data.success) {
+                        updateFileDisplay(data.file_data);
+                        updateFilenames(data.filenames);
+                        document.getElementById('file-selection-section').style.display = 'none';
+                        document.getElementById('result-section').style.display = 'block';
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => {
+                    hideLoader();
+                    console.error('Error:', error);
+                    alert('An error occurred while processing your request.');
+                });
+            }
+        },
+        linkType: "direct",
+        multiselect: true,
+        extensions: ['.pdf'],
+    });
+  }
+
+
+  let developerKey = 'AIzaSyA7b_RFGNGubqM-o99S3FoEb5RQD3m_p_A'
+  let clientId = '511161570764-rbagpt51dcf0i7s4be2255fub2pbv5da.apps.googleusercontent.com'
+  let appId = 'pdf-tools-431007'
+  let oauthToken = '{{ credentials.token|default:"" }}'
+  let needAuth = {{ need_auth|yesno:"true,false" }};
+
+function startPicker() {
+      if (oauthToken) {
+          createPicker();
+      } else {
+          authenticateAndOpenPicker();
+      }
+    }
+
+function authenticateAndOpenPicker() {
+    var authWindow = window.open('{% url "authorize" %}', 'authWindow', 'width=600,height=600');
+    window.addEventListener('message', function(event) {
+        if (event.data === 'authorized') {
+            console.log("Authorization message received");
+            authWindow.close();
+            // Instead of reloading, fetch the new token and open the picker
+            fetchNewTokenAndOpenPicker();
+        }
+    });
+}
+
+function fetchNewTokenAndOpenPicker() {
+    // Fetch the new token from the server
+    fetch('{% url "get_oauth_token" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                console.log("New token received");
+                oauthToken = data.token;
+                needAuth = false;
+                createPicker();
+            } else {
+                console.error("Failed to get new token");
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+  function createPicker() {
+      gapi.load('picker', function () {
+          let view = new google.picker.View(google.picker.ViewId.DOCS)
+              .setMimeTypes('application/pdf')
+          let picker = new google.picker.PickerBuilder()
+              .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+              .setOAuthToken(oauthToken)
+              .setAppId(appId)
+              .addView(view)
+              {% comment %} .addView(new google.picker.DocsUploadView()) {% endcomment %}
+              .setCallback(pickerCallback)
+              .build()
+          picker.setVisible(true)
+      })
+  }
+
+  function pickerCallback(data) {
+    if (data.action == google.picker.Action.PICKED) {
+        const form = document.getElementById('merge-upload');
+        showLoader();
+        const formData = new FormData(form);
+
+        data.docs.forEach(doc => {
+            console.log('Picked file ID:', doc.id); // Debugging line
+            formData.append('google_drive_files', doc.id);
+        });
+
+        // Submit the form data via fetch to the server
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+          hideLoader();
+            if (data.success) {
+                updateFileDisplay(data.file_data);
+                updateFilenames(data.filenames);
+                document.getElementById('file-selection-section').style.display = 'none';
+                document.getElementById('result-section').style.display = 'block';
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+          hideLoader();
+            console.error('Error:', error);
+            alert('An error occurred while processing your request.');
+        });
+    }
+  }
+
+const dropZones = document.getElementsByClassName('drop-zone');
+for (let dropZone of dropZones) {
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+        const selectCard = dropZone.querySelector('.select-card');
+        if (selectCard) {
+            selectCard.classList.add('dragging');
+        }
+        const uploaderExtra = dropZone.querySelector('.uploader__extra');
+        if (uploaderExtra) {
+            uploaderExtra.classList.add('dragging');
+        }
+        const displayFiles = dropZone.querySelector('.display-files');
+        if (displayFiles) {
+            displayFiles.classList.add('dragging');
+        }
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+        {% comment %} const selectCard = dropZone.querySelector('.select-card');
+        if (selectCard) {
+            selectCard.classList.remove('dragging');
+        }
+        const uploaderExtra = dropZone.querySelector('.uploader__extra');
+        if (uploaderExtra) {
+            uploaderExtra.classList.remove('dragging');
+        }
+        const displayFiles = dropZone.querySelector('.display-files');
+        if (displayFiles) {
+            displayFiles.classList.remove('dragging');
+        } {% endcomment %}
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const selectCard = dropZone.querySelector('.select-card');
+        if (selectCard) {
+            selectCard.classList.remove('dragging');
+        }
+        const uploaderExtra = dropZone.querySelector('.uploader__extra');
+        if (uploaderExtra) {
+            uploaderExtra.classList.remove('dragging');
+        }
+        const displayFiles = dropZone.querySelector('.display-files');
+        if (displayFiles) {
+            displayFiles.classList.remove('dragging');
+        }
+        handleFileUpload(e);
+    });
+}
+    
+  </script>
+{% endblock %}

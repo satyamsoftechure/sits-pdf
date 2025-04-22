@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+
+{% block title %}
+HTML to PDF
+{% endblock %}
+
+{% block content %}
+<div id="file-selection-section">
+    <section class="py-5">
+        <div class="container py-5">
+            <div class="text-center">
+                <h1 class="main-heading">HTML to PDF</h1>
+                <p class="tool__header__subtitle">Convert web pages or HTML files into PDFs for offline access and reliable sharing.</p>
+
+                <div class="select-form pt-4">
+                    <div class="card select-card">
+                        <div class="card-body">
+                            <div class="file-upload">
+                                <button type="button" class="btn select-btn" data-bs-toggle="modal" data-bs-target="#exampleModal">Add HTML</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="html_PDF">
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="url">Enter URL</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="url-form" action="{% url 'convert_url_to_pdf' %}" method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <div class="input-group">
+                                            <input class="form-control" id="url_input" name="url" type="url" placeholder="Ensure the URL begins with 'http://' or 'https://'" required>
+                                        </div>
+                                        <div class="input-group">
+                                            <input class="form-control" id="width_input" name="width" type="hidden" value="1440" placeholder="Enter width">
+                                        </div>
+                                        <div class="actions pt-4">
+                                            <button type="submit" id="url-submit-btn" class="ok btn btn-primary upload_button">Add</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="result-section" style="display: none;">
+  <section id="newhtmltopdf">
+    <div class="container-fluid p-0">
+      <div class="d-flex display-wrapper">
+        <div class="sidebar-wrapper">
+          <div class="sidebar" id="sidebar">
+            <button class="btn btn-primary sidebar-toggle" id="toggleSidebar"><i class="fa-solid fa-gear"></i></button>
+            <div class="sidebar-title">
+              <h2>HTML to PDF</h2>
+            </div>
+
+            <div class="option_panel_main">
+              <div class="option__panel_content p-3">
+                <form id="html_page_preview" action="{% url 'convert_url_to_pdf' %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="option_title">Website Url</div>
+                  <div class="input-group">
+                    <div class="form-outline" data-mdb-input-init>
+                      <input class="form-control" id="preview_url_input" name="url" type="url" value="{{ file_data.0.url }}" />
+                    </div>
+                    {% comment %} <button type="button" class="btn btn-primary" data-mdb-ripple-init><i class="fa-solid fa-arrows-rotate"></i></button> {% endcomment %}
+                  </div>
+                  <div class="option_title">Screen size</div>
+                  <div class="input-group">
+                    <div class="form-outline" data-mdb-input-init>
+                      <select class="form-select" id="preview_width_input" name="width" type="number">
+                        <option value="2560" {% if file_data.0.width == 2560 %}selected{% endif %}>4K-2560px</option>
+                        <option value="1920" {% if file_data.0.width == 1920 %}selected{% endif %}>Desktop HD-1920px</option>
+                        <option value="1440" {% if file_data.0.width == 1440 %}selected{% endif %}>Desktop-1440px</option>
+                        <option value="768" {% if file_data.0.width == 768 %}selected{% endif %}>Tablet-768px</option>
+                        <option value="320" {% if file_data.0.width == 320 %}selected{% endif %}>Mobile-320px</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="option_title">Orientation</div>
+                  <div class="input-group">
+                    <div class="btn-group" role="group" aria-label="Orientation">
+                      <input type="radio" class="btn-check" name="orientation" id="portrait" value="portrait" checked>
+                      <label class="potrait_button active" for="portrait">Portrait</label>
+
+                      <input type="radio" class="btn-check" name="orientation" id="landscape" value="landscape">
+                      <label class="potrait_button m-5" for="landscape">Landscape</label>
+                    </div>
+                  </div>
+                </form>
+                <div class="option_title">Page size</div>
+                  <div class="input-group">
+                    <div class="form-outline" data-mdb-input-init>
+                      <form action="{% url 'convert_url_to_pdf_convert_view' %}" id="convert_url_to_pdf_convert_view" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <select class="form-select" id="paper_format" name="paper_format" type="text" disabled>
+                          <option value="A0">A0</option>
+                          <option value="A2">A2</option>
+                          <option value="A3">A3</option>
+                          <option value="A4">A4</option>
+                          <option value="A5">A5</option>
+                        </select>
+                        <label for="margin"><p class="margin_preview">Margin</p></label>
+                        <select class="form-select" id="margin" name="margin">
+                          <option value="none">None</option>
+                          <option value="small">Small</option>
+                          <option value="large">Large</option>
+                        </select>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                {% comment %} <button type="submit" form="html_page_preview" class="preview_button">preview page <i class="fas fa-eye"></i> </button> {% endcomment %}
+            </div>
+          </div>
+        </div>
+        <div class="display-files">
+          <div class="html_OuterContainer">
+            <div class="html_innerImg" id="displayFiles">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn process-btn" id="final-output-button" form="convert_url_to_pdf_convert_view">HTML TO PDF<i class="fa-solid fa-circle-arrow-right ps-3"></i></button>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal_background">
+      <p class="text-center progress_text">Converting HTML to PDF File</p>
+      <div class="modal-body text-center p-0 m-0">
+        <div class="progress">
+          <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal_background">
+      <div class="modal-body text-center">
+        <div class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-light">Processing...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('url-form').addEventListener('submit', handleUrlSubmit);
+
+    document.getElementById('preview_url_input').addEventListener('change', handlePreviewChange);
+    document.getElementById('preview_width_input').addEventListener('change', handlePreviewChange);
+    document.querySelectorAll('input[name="orientation"]').forEach(function(el) {
+        el.addEventListener('change', handlePreviewChange);
+    });
+
+    document.getElementById('convert_url_to_pdf_convert_view').addEventListener('submit', showProgressBar);
+
+    document.getElementById('convert_url_to_pdf_convert_view').addEventListener('submit', function() {
+      document.getElementById('paper_format').disabled = false;
+    });
+
+    function handleUrlSubmit(e) {
+        e.preventDefault();
+        const urlInput = document.getElementById('url_input');
+        if (urlInput.value) {
+            showLoader();
+            const formData = new FormData();
+            formData.append('url', urlInput.value);
+            formData.append('width', document.getElementById('width_input').value);
+            submitToServer(formData);
+            const modalElement = document.getElementById('exampleModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            document.body.classList.remove('modal-open');
+        }
+    }
+    function handlePreviewChange() {
+      const urlInput = document.getElementById('preview_url_input');
+      if (urlInput.value) {
+          showLoader();
+          const formData = new FormData();
+          formData.append('url', urlInput.value);
+          formData.append('width', document.getElementById('preview_width_input').value);
+          formData.append('orientation', document.querySelector('input[name="orientation"]:checked').value);
+          submitToServer(formData);
+      }
+  }
+
+    function updateFileDisplay(fileData) {
+        const displayFiles = document.getElementById('displayFiles');
+        displayFiles.innerHTML = '';
+        fileData.forEach((file, index) => {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'file-preview';
+            fileDiv.draggable = true;
+            fileDiv.innerHTML = `
+                <div class="file-preview-wrapper">
+                    <img src="data:image/png;base64,${file.preview_image}" alt="Preview of ${file.url}" class="img-thumbnail" style="padding: 0cm;" />
+                </div>`;
+            displayFiles.appendChild(fileDiv);
+        });
+    }
+
+    const screenSizeSelect = document.getElementById('preview_width_input');
+    const pageSizeSelect = document.getElementById('paper_format');
+    const orientationRadios = document.querySelectorAll('input[name="orientation"]');
+
+    function updatePageSize() {
+        const screenSize = screenSizeSelect.value;
+        const orientation = document.querySelector('input[name="orientation"]:checked').value;
+
+        if (orientation === 'landscape') {
+            pageSizeSelect.value = 'A0';
+            screenSizeSelect.value = '2560';
+            screenSizeSelect.disabled = true;
+        } else {
+            screenSizeSelect.disabled = false;
+            switch (screenSize) {
+                case '2560':
+                    pageSizeSelect.value = 'A0';
+                    break;
+                case '1920':
+                    pageSizeSelect.value = 'A2';
+                    break;
+                case '1440':
+                    pageSizeSelect.value = 'A3';
+                    break;
+                case '768':
+                    pageSizeSelect.value = 'A4';
+                    break;
+                case '320':
+                    pageSizeSelect.value = 'A5';
+                    break;
+            }
+        }
+    }
+
+    screenSizeSelect.addEventListener('change', updatePageSize);
+    orientationRadios.forEach(radio => radio.addEventListener('change', updatePageSize));
+
+    function submitToServer(formData) {
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        formData.append('paper_format', pageSizeSelect.value);
+
+        fetch('{% url "convert_url_to_pdf" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoader();
+            if (data.success) {
+                updateFileDisplay(data.file_data);
+                updateInputFields(data.file_data);
+                document.getElementById('file-selection-section').style.display = 'none';
+                document.getElementById('result-section').style.display = 'block';
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            hideLoader();
+            alert('An error occurred while processing your request.');
+        });
+    }
+
+    function updateInputFields(fileData) {
+      console.log('Received fileData:', fileData);
+  
+      if (fileData && fileData.length > 0) {
+          console.log('Updating fields with the following data:', fileData[0]);
+  
+          // Update both sets of input fields
+          document.getElementById('url_input').value = fileData[0].url;
+          document.getElementById('preview_url_input').value = fileData[0].url;
+          console.log('Updated url inputs with value:', fileData[0].url);
+  
+          document.getElementById('width_input').value = fileData[0].width;
+          document.getElementById('preview_width_input').value = fileData[0].width;
+          console.log('Updated width inputs with value:', fileData[0].width);
+  
+          // Update the select element
+          const widthSelect = document.getElementById('preview_width_input');
+          Array.from(widthSelect.options).forEach(option => {
+              option.selected = parseInt(option.value) === fileData[0].width;
+          });
+
+          if (fileData[0].orientation) {
+            document.getElementById(fileData[0].orientation).checked = true;
+        }
+
+          updatePageSize();
+
+      } else {
+          console.log('No valid fileData provided or fileData is empty.');
+      }
+    }
+  
+
+    function showLoader() {
+      const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
+      loaderModal.show();
+    }
+
+    function hideLoader() {
+      const startTime = new Date().getTime();
+    
+      setTimeout(() => {
+        const loaderModal = bootstrap.Modal.getInstance(document.getElementById('loaderModal'));
+        if (loaderModal) {
+          loaderModal.hide();
+          
+          setTimeout(() => {
+            const modalElement = document.getElementById('loaderModal');
+            if (modalElement && modalElement.classList.contains('show')) {
+              console.log('Loader did not hide properly. Forcing hide.');
+              modalElement.classList.remove('show');
+              modalElement.style.display = 'none';
+              document.body.classList.remove('modal-open');
+              const modalBackdrop = document.querySelector('.modal-backdrop');
+              if (modalBackdrop) {
+                modalBackdrop.remove();
+              }
+            }
+          }, 100);
+        }
+      });
+    }
+
+    function showProgressBar(e) {
+      e.preventDefault();
+    
+      const progressModal = new bootstrap.Modal(document.getElementById('progressModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+      progressModal.show();
+    
+      const xhr = new XMLHttpRequest();
+    
+      xhr.open('POST', '{% url 'convert_url_to_pdf_convert_view' %}', true);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          updateProgressBar(percent);
+        }
+      });
+    
+      xhr.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          updateProgressBar(percent);
+        }
+      });
+    
+      xhr.addEventListener('load', () => {
+        updateProgressBar(100);
+        progressModal.hide();
+        document.getElementById('convert_url_to_pdf_convert_view').submit();
+      });
+    
+      xhr.send(new FormData(document.getElementById('convert_url_to_pdf_convert_view')));
+    }
+    
+    function updateProgressBar(percent) {
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = percent + '%';
+      progressBar.setAttribute('aria-valuenow', percent);
+      progressBar.textContent = percent + '%';
+    }
+
+    const marginSelect = document.getElementById('margin');
+
+    marginSelect.addEventListener('change', updateImagePadding);
+
+    function updateImagePadding() {
+      const selectedMargin = marginSelect.value;
+      const filePreviews = document.querySelectorAll('.file-preview');
+
+      filePreviews.forEach((filePreview) => {
+        const img = filePreview.querySelector('img');
+        switch (selectedMargin) {
+          case 'none':
+            img.style.padding = '0';
+            break;
+          case 'small':
+            img.style.padding = '0.5cm';
+            break;
+          case 'large':
+            img.style.padding = '1cm';
+            break;
+          default:
+            console.log('Invalid margin value');
+        }
+      });
+    }
+
+    const portraitRadio = document.getElementById('portrait');
+    const landscapeRadio = document.getElementById('landscape');
+    const portraitLabel = document.querySelector('label[for="portrait"]');
+    const landscapeLabel = document.querySelector('label[for="landscape"]');
+
+    // Add event listener to radio buttons
+    portraitRadio.addEventListener('change', () => {
+      if (portraitRadio.checked) {
+        portraitLabel.classList.add('active');
+        landscapeLabel.classList.remove('active');
+      }
+    });
+
+    landscapeRadio.addEventListener('change', () => {
+      if (landscapeRadio.checked) {
+        landscapeLabel.classList.add('active');
+        portraitLabel.classList.remove('active');
+      }
+    });
+});
+</script>
+{% endblock %}
