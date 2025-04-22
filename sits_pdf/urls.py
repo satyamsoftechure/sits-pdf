@@ -1,0 +1,37 @@
+from django.urls import path
+from . import views
+from . import api_views
+
+urlpatterns = [
+    path("", views.main, name="main"),
+    path("merge-pdf/", views.upload_pdfs, name="upload_pdfs"),
+    path("download-merge-pdf/", views.merge_pdfs, name="merge_pdfs"),
+    path("split-pdf/", views.upload_split_pdf, name="upload_split_pdf"),
+    path("download-split-pdf/",views.split_pdf,name="split_pdf"),
+    path("compress-pdf/", views.upload_compress_pdf, name="upload_compress_pdf"),
+    path('download-compress-pdf/', views.compress_pdfs, name='compress_pdfs'),
+    path("pdf-to-word/", views.pdf_to_word, name="pdf_to_word"),
+    path('download-word-file/', views.download_wordFile, name='download_wordFile'),
+    path("download/", views.download_page, name="download_page"),
+    path("download-file/", views.download_file, name="download_file"),
+    path('pdf-to-jpg/', views.pdf_to_jpg_view, name='pdf_to_jpg'),
+    path('download-pdf-to-jpg/', views.pdf_to_jpg_convert_view, name='pdf_to_jpg_convert_view'),
+    path('jpg-to-pdf/', views.jpg_to_pdf, name='jpg_to_pdf'),
+    path('download-jpg-to-pdf/', views.jpg_to_pdf_convert_view, name='jpg_to_pdf_convert_view'),
+    path('html-to-pdf/', views.convert_url_to_pdf, name='convert_url_to_pdf'),
+    path('download-html-to-pdf/', views.convert_url_to_pdf_convert_view, name='convert_url_to_pdf_convert_view'),
+    path('pdf-to-excel/', views.pdf_to_excel, name='pdf_to_excel'),
+    path('download-pdf-to-excel/', views.pdf_to_excel_convert_view, name='pdf_to_excel_convert_view'),
+    path('remove_file/', views.remove_file, name='remove_file'),
+    path('authorize/', views.authorize, name='authorize'),
+    path('authorize/oauth2callback/', views.oauth2callback, name='oauth2callback'),
+    path('get-oauth-token/', views.get_oauth_token, name='get_oauth_token'),
+    path('api/merge/', api_views.MergePDFAPIView.as_view()),
+    path('api/split-pdf/', api_views.SplitPDFAPI.as_view()),
+    path('api/compress/', api_views.CompressPDFAPIView.as_view()),
+    path('api/word/', api_views.PDFToWordAPI.as_view()),
+    path('api/pdf-to-jpg/', api_views.PDFToJPGAPI.as_view()),
+    path('api/jpg-to-pdf/', api_views.JPGToPDFAPI.as_view()),
+    path('api/html-to-pdf/', api_views.ConvertURLToPDFView.as_view()),    
+    path('api/pdf-to-excel/', api_views.PDFTOExcelAPI.as_view()),
+]

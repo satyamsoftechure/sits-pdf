@@ -1,0 +1,727 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Split PDF
+{% endblock %}
+
+{% block content %}
+  <div id="file-selection-section">
+    <div id="drop-zone" class="drop-zone">
+      <section class="py-5">
+        <div class="container py-5">
+          <div class="text-center">
+            <h1 class="main-heading">Split PDF File</h1>
+            <p class="tool__header__subtitle">Easily split large PDF files into smaller, manageable documents with precision and ease.</p>
+            <form action="{% url 'upload_split_pdf' %}" method="post" enctype="multipart/form-data" id="merge-upload">
+              {% csrf_token %}
+              <div class="select-form pt-4 display-files">
+                <div class="card select-card">
+                  <div class="card-body">
+                    <div class="file-upload">
+                      <input type="file" name="pdf_file" id="merge-file-input" class="file-selector-input file-input" accept="application/pdf" />
+                      <button type="submit" class="upload_button select-btn">Select PDF File</button>
+                    </div>
+                  </div>
+                  <p class="m-0 fw-bold">Drag and drop your PDF files here</p>
+                </div>
+                <div class="uploader__extra">
+                  <i class="fa-brands fa-dropbox link-btn" onclick="openDropboxPicker()"></i>
+                  <i class="fa-brands fa-google-drive link-btn" onclick="startPicker()"></i>
+                  <i class="fa fa-link link-btn" data-bs-toggle="modal" data-bs-target=".url"></i>
+                </div>
+              </div>
+              <input type="hidden" name="dropbox_file_link" id="dropbox-file-link">
+            </form>
+          </div>
+        </div>
+        
+      </section>
+    </div>
+    
+  </div>
+
+  <div class="modal fade url" id="url" tabindex="-1" aria-labelledby="url" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="url">Enter URL</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="url-form">
+            <div class="input-group">
+              <input class="form-control" id="url_input" name="url_input" type="url" placeholder="http://example.com/myfile.pdf" required />
+            </div>
+            <div class="actions pt-4">
+              <button type="submit" id="url-submit-btn" class="ok btn btn-primary">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="result-section" style="display: none;">
+    <div id="split__PDF">
+        <div class="container-fluid p-0">
+          <div class="d-flex display-wrapper">
+            <div class="sidebar-wrapper">
+              <div class="sidebar" id="sidebar">
+                <button class="btn btn-primary sidebar-toggle" id="toggleSidebar"><i class="fa-solid fa-gear"></i></button>
+                <div class="sidebar-title bg-light">
+                  <h2>Split PDF</h2>
+                </div>
+    
+                <div class="pdfOption">
+                  <div class="tabs_container">
+                    <ul class="nav nav-tabs" id="splitRange-Tab" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <a class="nav-link active " id="split-by-range-tab" data-bs-toggle="tab" data-bs-target="#split-by-range-tab-pane" type="button" role="tab" aria-controls="split-by-range-tab-pane" aria-selected="true"><img src="/static/images/icon/split_range.svg" alt="image"/>Split by range</a>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <a class="nav-link " id="extract-pages-tab" data-bs-toggle="tab" data-bs-target="#extract-pages-tab-pane" type="button" role="tab" aria-controls="extract-pages-tab-pane" aria-selected="false"><img src="/static/images/icon/split_extract.svg" alt="image" />Extract pages</a>
+                      </li>
+                    </ul>
+    
+                    <div class="tab-content" id="myTabContent">
+                      <div class="tab-pane active" id="split-by-range-tab-pane" role="tabpanel" aria-labelledby="split-by-range-tab" tabindex="0">
+                        <div class="splitby-rangeOptionshead my-3">
+                          <h6 class="ps-3">Range mode :</h6>
+    
+                          <div class="split-by-rangeOptions pt-2">
+                            <div class="tabs_container">
+                              <ul class="nav nav-tabs border-0 p-3" id="splitrangeOption_Tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                  <a class="nav-link active" id="customRange-tab" data-bs-toggle="tab" data-bs-target="#customRange-tab-pane" type="button" role="tab" aria-controls="customRange-tab-pane" aria-selected="true">Custom range</a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <a class="nav-link" id="fixedRanges-tab" data-bs-toggle="tab" data-bs-target="#fixedRanges-tab-pane" type="button" role="tab" aria-controls="fixedRanges-tab-pane" aria-selected="false">Fixed range</a>
+                                </li>
+                              </ul>
+    
+                              <div class="tab-content" id="myTabContent">
+                                <div class="tab-pane active" id="customRange-tab-pane" role="tabpanel" aria-labelledby="customRange-tab" tabindex="0">
+                                      <div class="splitby-rangeOptions">
+                                        <div id="split-ranges" class="splitRangeClass">
+                                          <div class="form-area ranges mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-3 ps-3">
+                                              <h6 class="title4">Range:</h6>
+                                            </div>
+                                            <div class="my-form px-3">
+                                              <div class="mb-3 form__group form__group--boxed">
+                                                <label for="page_init_2" class="form-label">From page</label>
+                                                <input id="page_init_2" class="form-control" type="number" name="start_page" value="1" min="1" />
+                                              </div>
+                                              <div class="mb-3 form__group form__group--boxed">
+                                                <label for="page_end_2" class="form-label">To</label>
+                                                <input id="page_end_2" class="form-control" type="number" name="end_page" min="1" />
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                </div>
+    
+                                <div class="tab-pane" id="fixedRanges-tab-pane" role="tabpanel" aria-labelledby="fixedRanges-tab" tabindex="0">
+                                      <div class="fixedRangeContainer px-3">
+                                        <div class="form-group d-flex justify-content-between align-items-center">
+                                          <label for="fixedRange" class="fs-5 fw-bold"><h6>Split into page ranges of:</h6></label>
+                                          <input id="fixedRange" class="form-control border rounded border-dark" type="number" name="pages_per_file" value="1" placeholder="Type a number" min="1" />
+                                        </div>
+                                      </div>
+                                </div>
+
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+    
+                      <div class="tab-pane" id="extract-pages-tab-pane" role="tabpanel" aria-labelledby="extract-pages-tab" tabindex="0">
+                        <div class="splitby-rangeOptionshead my-3">
+                          <h6 class="ps-3">Extract mode :</h6>
+    
+                          <div class="split-by-rangeOptions pt-2">
+                            <div class="tabs_container">
+                              <ul class="nav nav-tabs border-0 p-3" id="splitrangeOption_Tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link active" id="extractAll-pages-tab" data-bs-toggle="tab" data-bs-target="#extractAll-pages-tab-pane" type="button" role="tab" aria-controls="extractAll-pages-tab-pane" aria-selected="true">All pages</a>
+                                </li>
+                                
+                                <li class="nav-item" role="presentation">
+                                  <a class="nav-link" id="select-pages-tab" data-bs-toggle="tab" data-bs-target="#select-pages-tab-pane" type="button" role="tab" aria-controls="select-pages-tab-pane" aria-selected="false">Select Pages</a>
+                                </li>
+                              </ul>
+    
+                            <div class="tab-content" id="myTabContent">
+                                <div class="tab-pane active" id="extractAll-pages-tab-pane" role="tabpanel" aria-labelledby="extractAll-pages-tab" tabindex="0">
+                                        <div class="fixedRangeContainer px-3">
+                                            <p class="info_para">
+                                                Selected PDF pages will be converted into separate PDF files. 1 PDF for each page will be created.
+                                            </p>
+                                        </div>
+                                </div>
+    
+                                <div class="tab-pane" id="select-pages-tab-pane" role="tabpanel" aria-labelledby="select-pages-tab" tabindex="0">
+                                      <div class="selectPagesContainer">
+                                        <div class="fixedRangeContainer px-3">
+                                          <div class="form-group">
+                                            <label for="pages-to-extract" class="fw-bold"><h6>Pages to extract:</h6></label>
+                                            <input id="pages-to-extract" class="form-control border rounded my-3 border-dark" type="text" name="pages_to_extract" placeholder="e.g. 1-12, 29-30, 41, 54, ..." />
+                                          </div>
+                                        </div>
+                                      </div>
+                                </div>
+                            </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+    
+            <div class="display-files" id="displayFiles">
+
+            </div>
+          </div>
+          <form id="splitPdfForm" action="{% url 'split_pdf' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="filename" value="{{ filename }}" />
+            <input type="hidden" name="split_type" id="splitType">
+          </form>
+          <button id="splitPdfBtn" class="btn process-btn">Split PDF<i class="fa-solid fa-circle-arrow-right ps-3"></i></button>
+        </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal_background">
+        <p class="text-center progress_text">Uploading and Compressing Files</p>
+        <div class="modal-body text-center p-0 m-0">
+          <div class="progress">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="loaderModal" tabindex="-1" aria-labelledby="loaderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal_background">
+        <div class="modal-body text-center">
+          <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-light">Processing...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const splitPdfBtn = document.getElementById('splitPdfBtn');
+        const splitPdfForm = document.getElementById('splitPdfForm');
+        const splitTypeInput = document.getElementById('splitType');
+    
+        splitPdfBtn.addEventListener('click', function() {
+            let splitType;
+            let additionalData = {};
+    
+            if (document.getElementById('split-by-range-tab').classList.contains('active')) {
+                if (document.getElementById('customRange-tab').classList.contains('active')) {
+                    splitType = 'custom';
+                    additionalData.start_page = document.getElementById('page_init_2').value;
+                    additionalData.end_page = document.getElementById('page_end_2').value;
+                } else if (document.getElementById('fixedRanges-tab').classList.contains('active')) {
+                    splitType = 'fixed_range';
+                    additionalData.pages_per_file = document.getElementById('fixedRange').value;
+                }
+            } else if (document.getElementById('extract-pages-tab').classList.contains('active')) {
+                if (document.getElementById('extractAll-pages-tab').classList.contains('active')) {
+                    splitType = 'all_pages';
+                } else if (document.getElementById('select-pages-tab').classList.contains('active')) {
+                    splitType = 'selected_pages';
+                    additionalData.pages_to_extract = document.getElementById('pages-to-extract').value;
+                }
+            }
+    
+            splitTypeInput.value = splitType;
+    
+            // Add additional data to the form
+            for (let key in additionalData) {
+                let input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = additionalData[key];
+                splitPdfForm.appendChild(input);
+            }
+    
+            splitPdfForm.submit();
+        });
+    });
+
+    {% comment %} document.getElementsByClassName("sp")[0].addEventListener('click', function() {
+        document.getElementById('split').classList.remove('hidden');
+        document.getElementById('extract').classList.add('hidden');
+    });
+    document.getElementsByClassName("ext")[0].addEventListener('click', function() {
+        // Show content2 and hide content1
+        document.getElementById('extract').classList.remove('hidden');
+        document.getElementById('split').classList.add('hidden');
+    }); {% endcomment %}
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('merge-upload').addEventListener('change', handleFileUpload);
+      const addMoreFilesInputs = document.getElementsByClassName('add_more_files_input');
+      for (let input of addMoreFilesInputs) {
+          input.addEventListener('change', handleFileUpload);
+      }
+      
+      document.getElementById('url-form').addEventListener('submit', handleUrlSubmit);
+  
+      function handleUrlSubmit(e) {
+          e.preventDefault();
+          console.log("URL form submitted"); // Debug log
+          const urlInput = document.getElementById('url_input');
+          if (urlInput.value) {
+              showLoader();
+              const formData = new FormData();
+              formData.append('url_input', urlInput.value);
+              submitToServer(formData);
+              // Properly close the modal and remove the backdrop
+              const modalElement = document.getElementById('url');
+              const modalInstance = bootstrap.Modal.getInstance(modalElement);
+              modalInstance.show();
+              if (modalInstance) {
+                modalInstance.hide();
+              }
+    
+              modalElement.addEventListener('hidden.bs.modal', () => {
+                urlInput.value = ''; // Reset input field
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove(); // Ensure backdrop is removed
+                }
+                document.body.classList.remove('modal-open');
+            }, { once: true });
+          }
+      }
+    });
+
+    document.getElementById('splitPdfBtn').addEventListener('click', showProgressBar);
+
+    function showProgressBar(e) {
+      e.preventDefault();
+    
+      const progressModal = new bootstrap.Modal(document.getElementById('progressModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+      progressModal.show();
+    
+      const xhr = new XMLHttpRequest();
+    
+      xhr.open('POST', '{% url 'split_pdf' %}', true);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          updateProgressBar(percent);
+        }
+      });
+    
+      xhr.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          updateProgressBar(percent);
+        }
+      });
+    
+      xhr.addEventListener('load', () => {
+        updateProgressBar(100);
+        progressModal.hide();
+        document.getElementById('splitPdfForm').submit();
+      });
+    
+      xhr.send(new FormData(document.getElementById('splitPdfForm')));
+    }
+    
+    function updateProgressBar(percent) {
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = percent + '%';
+      progressBar.setAttribute('aria-valuenow', percent);
+      progressBar.textContent = percent + '%';
+    }
+    
+    function showLoader() {
+      const loaderModal = new bootstrap.Modal(document.getElementById('loaderModal'));
+      loaderModal.show();
+    }
+
+    function hideLoader() {
+      const startTime = new Date().getTime();
+    
+      setTimeout(() => {
+        const loaderModal = bootstrap.Modal.getInstance(document.getElementById('loaderModal'));
+        if (loaderModal) {
+          loaderModal.hide();
+          
+          setTimeout(() => {
+            const modalElement = document.getElementById('loaderModal');
+            if (modalElement && modalElement.classList.contains('show')) {
+              console.log('Loader did not hide properly. Forcing hide.');
+              modalElement.classList.remove('show');
+              modalElement.style.display = 'none';
+              document.body.classList.remove('modal-open');
+              const modalBackdrop = document.querySelector('.modal-backdrop');
+              if (modalBackdrop) {
+                modalBackdrop.remove();
+              }
+            }
+          }, 100);
+        }
+      });
+    }
+
+    function updateFileDisplay(fileData) {
+        const displayFiles = document.getElementById('displayFiles');
+        displayFiles.innerHTML = ''; // Clear existing files
+        fileData.forEach(file => {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'files';
+            fileDiv.setAttribute('data-filename', file.filename);
+            fileDiv.setAttribute('data-fileid', file.file_id);
+            const displayFilename = file.filename.length > 25 ? file.filename.substring(0, 22) + '...' : file.filename;
+            fileDiv.innerHTML = `
+                <img src="${file.image_data}" alt="Preview of ${file.filename}" />
+                <p class="m-0">${displayFilename}</p>
+                <button class="close-btn" onclick="removeFile('${file.file_id}')"><i class="fa-regular fa-circle-xmark delete-btn"></i></button>`;
+            displayFiles.appendChild(fileDiv);
+        });
+        updateMergePageState();
+    }
+
+    function updateMergePageState() {
+        const dropActive = document.getElementById('sidebar');
+        const displayFiles = document.getElementById('displayFiles').children;
+      
+        if (displayFiles.length === 0) {
+          dropActive.classList.add('no_fie_active');
+          const pdfOptionDiv = dropActive.querySelector('.pdfOption');
+          if (pdfOptionDiv) {
+            pdfOptionDiv.remove();
+          }
+          if (!dropActive.querySelector('h6')) {
+            const paragraph = document.createElement('h6');
+            paragraph.textContent = 'No file Selected';
+            paragraph.classList.add('no-files-message');
+            const image = document.createElement('img');
+            image.src = '/static/images/icon/arrow.svg';
+            image.classList.add('no-file-icon');
+            const para = document.createElement('h6');
+            para.textContent = 'Please add a file to proceed';
+            para.classList.add('no-files-message');
+            const button = document.createElement('button');
+            button.textContent = 'Add files';
+            button.classList.add('button_files');
+      
+            button.addEventListener('click', function(event) {
+              event.preventDefault();
+              console.log('Add files button clicked');
+              location.reload();
+            });
+      
+            dropActive.appendChild(paragraph);
+            dropActive.appendChild(image);
+            dropActive.appendChild(para);
+            dropActive.appendChild(button);
+          }
+        } else {
+          dropActive.classList.remove('no_fie_active');    
+        }
+      }
+
+    const dropZones = document.getElementsByClassName('drop-zone');
+    for (let dropZone of dropZones) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+            const selectCard = dropZone.querySelector('.select-card');
+            if (selectCard) {
+                selectCard.classList.add('dragging');
+            }
+            const uploaderExtra = dropZone.querySelector('.uploader__extra');
+            if (uploaderExtra) {
+                uploaderExtra.classList.add('dragging');
+            }
+            const displayFiles = dropZone.querySelector('.display-files');
+            if (displayFiles) {
+                displayFiles.classList.add('dragging');
+            }
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+            {% comment %} const selectCard = dropZone.querySelector('.select-card');
+            if (selectCard) {
+                selectCard.classList.remove('dragging');
+            }
+            const uploaderExtra = dropZone.querySelector('.uploader__extra');
+            if (uploaderExtra) {
+                uploaderExtra.classList.remove('dragging');
+            }
+            const displayFiles = dropZone.querySelector('.display-files');
+            if (displayFiles) {
+                displayFiles.classList.remove('dragging');
+            } {% endcomment %}
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const selectCard = dropZone.querySelector('.select-card');
+            if (selectCard) {
+                selectCard.classList.remove('dragging');
+            }
+            const uploaderExtra = dropZone.querySelector('.uploader__extra');
+            if (uploaderExtra) {
+                uploaderExtra.classList.remove('dragging');
+            }
+            const displayFiles = dropZone.querySelector('.display-files');
+            if (displayFiles) {
+                displayFiles.classList.remove('dragging');
+            }
+            handleFileUpload(e);
+        });
+    }
+
+    function removeFile(fileId) {
+      fetch('{% url 'remove_file' %}', {
+          method: 'POST',
+          body: JSON.stringify({ fileId: fileId }),
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              updateFileDisplay(data.file_data);
+          } else {
+              alert(data.error);
+          }
+      });
+    }
+
+    function handleFileUpload(e) {
+        e.preventDefault();
+        showLoader();
+        const formData = new FormData();
+        
+        if (e.type === 'drop') {
+            for (let file of e.dataTransfer.files) {
+                formData.append('pdf_file', file);
+            }
+        } else {
+            for (let file of e.target.files) {
+                formData.append('pdf_file', file);
+            }
+        }
+
+        submitToServer(formData);
+
+        e.target.value = '';
+    }
+
+    function submitToServer(formData) {
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        console.log("Submitting to server");
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+
+        fetch('{% url 'upload_split_pdf' %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server response:', data); 
+            hideLoader();
+            if (data.success) {
+                document.getElementById('file-selection-section').style.display = 'none';
+                document.getElementById('result-section').style.display = 'block';
+                updateFileDisplay(data.file_data);
+                {% comment %} updateFilenames(data.filenames); {% endcomment %}
+                const fileData = data.file_data[0];  // Assuming single file upload
+                const total_pages = fileData.total_pages;
+                const startPageInput = document.querySelector("#page_init_2");
+                const endPageInput = document.querySelector("#page_end_2");
+
+                startPageInput.max = total_pages;
+                endPageInput.max = total_pages;
+
+                // Optionally set the end page to the last page automatically
+                endPageInput.value = total_pages;
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            hideLoader();
+            console.error('Error:', error);
+            alert('An error occurred while processing your request.');
+        });
+    }
+
+    function openDropboxPicker() {
+        Dropbox.choose({
+            success: function(files) {
+                if (files && files.length > 0) {
+                    const form = document.getElementById('merge-upload');
+                    showLoader();
+                    const formData = new FormData(form);
+
+                    files.forEach((file, index) => {
+                    formData.append(`dropbox_file_link_${index}`, file.link);
+                    });
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                    hideLoader();
+                        if (data.success) {
+                            updateFileDisplay(data.file_data);
+                            document.getElementById('file-selection-section').style.display = 'none';
+                            document.getElementById('result-section').style.display = 'block';
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        hideLoader();
+                        console.error('Error:', error);
+                        alert('An error occurred while processing your request.');
+                    });
+                }
+            },
+            linkType: "direct",
+            multiselect: false,
+            extensions: ['.pdf'],
+        });
+    }
+
+
+    let developerKey = 'AIzaSyA7b_RFGNGubqM-o99S3FoEb5RQD3m_p_A'
+    let clientId = '511161570764-rbagpt51dcf0i7s4be2255fub2pbv5da.apps.googleusercontent.com'
+    let appId = 'pdf-tools-431007'
+    let oauthToken = '{{ credentials.token|default:"" }}'
+    let needAuth = {{ need_auth|yesno:"true,false" }};
+
+    function startPicker() {
+      if (oauthToken) {
+          createPicker();
+      } else {
+          authenticateAndOpenPicker();
+      }
+    }
+
+        function authenticateAndOpenPicker() {
+            var authWindow = window.open('{% url "authorize" %}', 'authWindow', 'width=600,height=600');
+            window.addEventListener('message', function(event) {
+                if (event.data === 'authorized') {
+                    console.log("Authorization message received");
+                    authWindow.close();
+                    fetchNewTokenAndOpenPicker();
+                }
+            });
+        }
+
+    function fetchNewTokenAndOpenPicker() {
+        fetch('{% url "get_oauth_token" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    console.log("New token received");
+                    oauthToken = data.token;
+                    needAuth = false;
+                    createPicker();
+                } else {
+                    console.error("Failed to get new token");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function createPicker() {
+        gapi.load('picker', function () {
+            let view = new google.picker.View(google.picker.ViewId.DOCS)
+                .setMimeTypes('application/pdf')
+            let picker = new google.picker.PickerBuilder()
+                {% comment %} .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) {% endcomment %}
+                .setOAuthToken(oauthToken)
+                .setAppId(appId)
+                .addView(view)
+                {% comment %} .addView(new google.picker.DocsUploadView()) {% endcomment %}
+                .setCallback(pickerCallback)
+                .build()
+            picker.setVisible(true)
+        })
+    }
+
+    function pickerCallback(data) {
+        if (data.action == google.picker.Action.PICKED) {
+            const form = document.getElementById('merge-upload');
+            showLoader();
+            const formData = new FormData(form);
+
+            data.docs.forEach(doc => {
+                console.log('Picked file ID:', doc.id); // Debugging line
+                formData.append('google_drive_files', doc.id);
+            });
+
+            // Submit the form data via fetch to the server
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+            hideLoader();
+                if (data.success) {
+                    updateFileDisplay(data.file_data);
+                    document.getElementById('file-selection-section').style.display = 'none';
+                    document.getElementById('result-section').style.display = 'block';
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+            hideLoader();
+                console.error('Error:', error);
+                alert('An error occurred while processing your request.');
+            });
+        }
+    }   
+  </script>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Home Page
+{% endblock %}
+
+{% block content %}
+  <div class="pattern-bg">
+    <section class="main-banner-section py-5">
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col-md-5 align-self-center banner-content">
+            <h1>Simplify Your PDF Tasks With <span>SITS PDF</span></h1>
+            <p class="tool__header__subtitle">Say goodbye to PDF headaches! Effortlessly merge, split, compress, and convert your documents with our all-in-one SITS PDF. Simplify your tasks and reclaim your time. Let our tool handle the heavy lifting, so you can focus on what really matters.</p>
+          </div>
+          <div class="col-md-6 mt-4 sits_pdf_banner">
+            <img src="{% static 'images/icon/sits banner.svg' %}" alt="img-fluid" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="product-list py-5">
+      <div class="container">
+        <div class="text-center pb-3">
+          <h2 class="main-heading">Most Popular <span>SITS PDF Tools</span></h2>
+          <p class="tool__header__subtitle">Discover the most popular tools for merging, splitting, compressing, and converting PDFs. Elevate your productivity and handle your documents like a pro!</p>
+        </div>
+        <div class="row g-3 pt-3">
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/merge-pdf" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/Merge pdf.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>Merge PDF</h3>
+                  <p>Effortlessly combine multiple PDF files into one seamless document for streamlined viewing and sharing.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/split-pdf" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/Split pdf.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>Split PDF</h3>
+                  <p>Easily split large PDF files into smaller, manageable documents with precision and ease.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/compress-pdf" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/Compress pdf.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>Compress PDF</h3>
+                  <p>Reduce the file size of your PDFs without compromising quality for faster uploads and downloads.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/pdf-to-word" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/pdf to word.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>PDF TO WORD</h3>
+                  <p>Convert your PDFs to editable Word documents for easy text modifications and formatting.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/pdf-to-jpg" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/pdf to jpg.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>PDF TO JPG</h3>
+                  <p>Transform your PDF pages into high-quality JPG images for versatile use and easy sharing.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/jpg-to-pdf" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/jpg to pdf.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>JPG TO PDF</h3>
+                  <p>Convert your JPG images into a single PDF document for organized and professional presentation.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/html-to-pdf" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/html to pdf.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>HTML TO PDF</h3>
+                  <p>Convert web pages or HTML files into PDFs for offline access and reliable sharing.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-3 col-sm-6">
+            <a href="/pdf-to-excel" class="tools_anchor">
+              <div class="product-card">
+                <img src="{% static 'images/icon/pdf to excel.svg' %}" alt="img-fluid" class="img-fluid" />
+                <div class="pt-3 product-content">
+                  <h3>PDF TO EXCEL</h3>
+                  <p>Effortlessly convert PDF tables and data into Excel spreadsheets for easy analysis and manipulation.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          {% comment %} <div class="text-center pt-4">
+            <button class="btn btn-primary">View More Tool</button>
+          </div> {% endcomment %}
+        </div>
+      </div>
+    </section>
+    <!-- product list end -->
+    <!-- playstore start -->
+    <section class="py-5 dark-bg">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6 align-self-center">
+            <div>
+              <h2 class="text-light main-heading">Get it on <span>Mobile</span></h2>
+              <p class="text-light pt-4">Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel quos, praesentium sunt voluptatum corrupti blanditiis quibusdam repudiandae, veritatis accusamus distinctio quas alias illo ex quo quaerat optio placeat, corporis eligendi.</p>
+              <div class="playstore-img">
+                <img src="{% static 'images/google-play.webp' %}" alt="img-fluid" class="img-fluid" />
+                <img src="{% static 'images/google-play.webp' %}" alt="img-fluid" class="img-fluid" />
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mt-3">
+            <img src="{% static 'images/mobile-app.png' %}" alt="img-fluid" class="img-fluid" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- playstore End -->
+    <!-- why choose start -->
+    <section class="why-choose-us py-5">
+      <div class="container">
+        <div class="text-center pb-3">
+          <h2 class="main-heading">Why Choose <span>SITS PDF</span></h2>
+          <p class="tool__header__subtitle">Experience seamless PDF management with tools that are reliable, efficient, and designed to simplify your workflow.</p>
+        </div>
+        <div class="row g-3 pt-3">
+          <div class="col-md-6 col-lg-4 col-sm-6">
+            <div class="why-choose-card" style="background-color: var(--pink-light);">
+              <img src="/static/images/icon/user.png" alt="People Trust Us" />
+              <div class="pt-3 why-choose-content">
+                <h3>User-Friendly Interface</h3>
+                <p>SITS PDF offers an intuitive and easy-to-navigate interface, making it accessible for users of all skill levels.</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="col-md-6 col-lg-4 col-sm-6">
+            <div class="why-choose-card" style="background-color: var(--light-yellow);">
+              <img src="/static/images/icon/briefcase.png" alt="Businesses Trust Us" />
+              <div class="pt-3 why-choose-content">
+                <h3>Comprehensive Toolset</h3>
+                <p>With a wide range of features, from editing and merging to converting and securing PDFs, SITS PDF covers all your document needs.</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="col-md-6 col-lg-4 col-sm-6">
+            <div class="why-choose-card" style="background-color: var(--light-gray);">
+              <img src="/static/images/icon/speedometer.png" alt="Our Partner Trust Us" />
+              <div class="pt-3 why-choose-content">
+                <h3>High Efficiency</h3>
+                <p>SITS PDF is optimized for speed and performance, ensuring quick processing of even large or complex PDF files.</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="col-md-6 col-lg-4 col-sm-6">
+            <div class="why-choose-card" style="background-color: var(--light-blue);">
+              <img src="/static/images/icon/url-pdf.png" alt="24x7 Customer Support" />
+              <div class="pt-3 why-choose-content">
+                <h3>Direct URL PDF Retrieval</h3>
+                <p>Easily manage PDFs directly from a URL, simplifying access to online documents without the need for manual downloads.</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="col-md-6 col-lg-4 col-sm-6">
+            <div class="why-choose-card" style="background-color: var(--light-green);">
+              <img src="/static/images/icon/laptop.png" alt="256-Bit TLS Encryption" />
+              <div class="pt-3 why-choose-content">
+                <h3>Cross-Platform Compatibility</h3>
+                <p>SITS PDF works seamlessly across various operating systems, allowing you to manage your PDFs on any device.</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="col-md-6 col-lg-4 col-sm-6">
+            <div class="why-choose-card" style="background-color: var(--light-sky);">
+              <img src="/static/images/icon/cloud-alt (1).png" alt="Security Standards" />
+              <div class="pt-3 why-choose-content">
+                <h3>Cloud Integration</h3>
+                <p>Seamlessly integrate with popular cloud storage services like Google Drive and Dropbox, allowing you to access and manage your PDFs from anywhere.</p>
+              </div>
+            </div>
+          </div>
+        </div>        
+      </div>
+    </section>
+    <!-- why choose End -->
+    <!-- api start -->
+    <section class="api-section">
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col-lg-5 align-self-center">
+            <h2 class="main-heading">Comprehensive <span>API Solutions</span> for Every Need</h2>
+            <p>Our platform offers a wide range of APIs to cater to all your requirements. From data integration to authentication, our APIs ensure seamless functionality and enhanced performance. Streamline your operations and improve efficiency with our robust, scalable, and secure API solutions designed to meet your diverse needs.</p>
+          </div>
+          <div class="col-lg-6">
+            <img src="{% static 'images/api.jpg' %}" alt="cloud" class="img-fluid" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- api end -->
+  </div>
+{% endblock %}
